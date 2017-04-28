@@ -4,71 +4,62 @@ newsData <- readLines(file("en_US.news.txt"))
 blogData <- readLines(file("en_US.blogs.txt"))
 twitterData <- readLines(file("en_US.twitter.txt"))
 
-# Read the blogs and Twitter data into R
-blogs <- readLines("final/en_US/en_US.blogs.txt", encoding = "UTF-8", skipNul = TRUE)
-news <- readLines("final/en_US/en_US.news.txt", encoding = "UTF-8", skipNul = TRUE)
-twitter <- readLines("final/en_US/en_US.twitter.txt", encoding = "UTF-8", skipNul = TRUE)
-
-library(stringi)
-
-# Get file sizes
-blogs.size <- file.info("final/en_US/en_US.blogs.txt")$size / 1024 ^ 2
-news.size <- file.info("final/en_US/en_US.news.txt")$size / 1024 ^ 2
-twitter.size <- file.info("final/en_US/en_US.twitter.txt")$size / 1024 ^ 2
-
-# Get words in files
-blogs.words <- stri_count_words(blogs)
-news.words <- stri_count_words(news)
-twitter.words <- stri_count_words(twitter)
-
-# Summary of the data sets
-data.frame(source = c("blogs", "news", "twitter"),
-           file.size.MB = c(blogs.size, news.size, twitter.size),
-           num.lines = c(length(blogs), length(news), length(twitter)),
-           num.words = c(sum(blogs.words), sum(news.words), sum(twitter.words)),
-           mean.num.words = c(mean(blogs.words), mean(news.words), mean(twitter.words)))
-           
+print(paste("News Data Length = ", length(newsData),
+            ", News Blog Length = ", length(blogData),
+            ", News twitter Length = ", length(twitterData)
+            ))
 library(tm)
-# Sample the data
-set.seed(679)
-data.sample <- c(sample(blogs, length(blogs) * 0.01),
-                 sample(news, length(news) * 0.01),
-                 sample(twitter, length(twitter) * 0.01))
-
-# Create corpus and clean the data
-corpus <- VCorpus(VectorSource(data.sample))
-toSpace <- content_transformer(function(x, pattern) gsub(pattern, " ", x))
-corpus <- tm_map(corpus, toSpace, "(f|ht)tp(s?)://(.*)[.][a-z]+")
-corpus <- tm_map(corpus, toSpace, "@[^\\s]+")
-corpus <- tm_map(corpus, tolower)
-corpus <- tm_map(corpus, removeWords, stopwords("en"))
-corpus <- tm_map(corpus, removePunctuation)
-corpus <- tm_map(corpus, removeNumbers)
+## Loading required package: NLP
+#Load 5000 lines from every set in corpus
+merged <- paste(newsData[1:5000], blogData[1:5000], twitterData[1:5000])
+corpus <- VCorpus(VectorSource(merged))
 corpus <- tm_map(corpus, stripWhitespace)
-corpus <- tm_map(corpus, PlainTextDocument)
+corpus <- tm_map(corpus, removeNumbers)
+corpus <- tm_map(corpus, removePunctuation)
+corpus <- tm_map(corpus, removeWords, stopwords())
 
-options(mc.cores=1)
+library(RWeka)
 
-getFreq <- function(tdm) {
-  freq <- sort(rowSums(as.matrix(tdm)), decreasing = TRUE)
-  return(data.frame(word = names(freq), freq = freq))
+corpusDf <-data.frame(text=unlist(sapply(corpus, 
+                  `[`, "content")), stringsAsFactors=F)
+
+findNGrams <- function(corp, grams) {
+  ngram <- NGramTokenizer(corp, Weka_control(min = grams, max = grams,
+                      delimiters = " \\r\\n\\t.,;:\"()?!"))
+  ngram2 <- data.frame(table(ngram))
+  #pick only top 25
+  ngram3 <- ngram2[order(ngram2$Freq,decreasing = TRUE),][1:100,]
+  colnames(ngram3) <- c("String","Count")
+  ngram3
 }
-bigram <- function(x) NGramTokenizer(x, Weka_control(min = 2, max = 2))
-trigram <- function(x) NGramTokenizer(x, Weka_control(min = 3, max = 3))
-makePlot <- function(data, label) {
-  ggplot(data[1:30,], aes(reorder(word, -freq), freq)) +
-         labs(x = label, y = "Frequency") +
-         theme(axis.text.x = element_text(angle = 60, size = 12, hjust = 1)) +
-         geom_bar(stat = "identity", fill = I("grey50"))
-}
 
-# Get frequencies of most common n-grams in data sample
-freq1 <- getFreq(removeSparseTerms(TermDocumentMatrix(corpus), 0.9999))
-freq2 <- getFreq(removeSparseTerms(TermDocumentMatrix(corpus, control = list(tokenize = bigram)), 0.9999))
-freq3 <- getFreq(removeSparseTerms(TermDocumentMatrix(corpus, control = list(tokenize = trigram)), 0.9999))
+TwoGrams <- findNGrams(corpusDf, 2)
+ThreeGrams <- findNGrams(corpusDf, 3)
+FourGrams <- findNGrams(corpusDf, 4)
 
-makePlot(freq1, "30 Most Common Unigrams")
+library(wordcloud)
+## Loading required package: RColorBrewer
+require(RColorBrewer)
 
-makePlot(freq2, "30 Most Common Bigrams")
+par(mfrow = c(1, 3))
+palette <- brewer.pal(8,"Dark2")
 
-makePlot(freq3, "30 Most Common Trigrams")
+wordcloud(TwoGrams[,1], TwoGrams[,2], min.freq =1, 
+          random.order = F, ordered.colors = F, colors=palette)
+text(x=0.5, y=0, "2-gram cloud")
+
+wordcloud(ThreeGrams[,1], ThreeGrams[,2], min.freq =1, 
+          random.order = F, ordered.colors = F, colors=palette)
+text(x=0.5, y=0, "3-gram cloud")
+
+wordcloud(FourGrams[,1], FourGrams[,2], min.freq =1, 
+          random.order = F, ordered.colors = F, colors=palette)
+text(x=0.5, y=0, "4-gram cloud")
+
+par(mfrow = c(1, 1))
+
+barplot(TwoGrams[1:20,2], cex.names=0.5, names.arg=TwoGrams[1:20,1], col="red", main="2-Grams", las=2)
+
+barplot(ThreeGrams[1:20,2], cex.names=0.5, names.arg=ThreeGrams[1:20,1], col="green", main="3-Grams", las=2)
+
+barplot(FourGrams[1:20,2], cex.names=0.5, names.arg=FourGrams[1:20,1], col="blue", main="4-Grams", las=2)
