@@ -1,0 +1,3 @@
+# MILESTONE-REPORT
+
+This report presents some basic exploratory analysis made for the Milestone Report Submission in the Data Science Capstone course by Johns Hopkins at Coursera. The course objective is to apply data science in the area of natural language processing. The final result of the course will be to construct a Shiny application that accepts some text inputed by the user and try to predict what the next word will be. As start the course have provided a set of files containing texts extracted from blogs, news/media sites and twitter, to be used as a input in the creation of a prediction algorithm. In the next sessions we will be analyzing a subset of the data provided.
