@@ -26,11 +26,12 @@ corpusDf <-data.frame(text=unlist(sapply(corpus,
 findNGrams <- function(corp, grams) {
   ngram <- NGramTokenizer(corp, Weka_control(min = grams, max = grams,
                       delimiters = " \\r\\n\\t.,;:\"()?!"))
-  ngram2 <- data.frame(table(ngram))
-  #pick only top 25
-  ngram3 <- ngram2[order(ngram2$Freq,decreasing = TRUE),][1:100,]
-  colnames(ngram3) <- c("String","Count")
-  ngram3
+ngram2 <- data.frame(table(ngram))
+
+#pick only top 25
+ngram3 <- ngram2[order(ngram2$Freq,decreasing = TRUE),][1:100,]
+colnames(ngram3) <- c("String","Count")
+ngram3
 }
 
 TwoGrams <- findNGrams(corpusDf, 2)
