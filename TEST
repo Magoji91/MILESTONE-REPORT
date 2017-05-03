@@ -7,15 +7,21 @@ head(blog)
 twitter<- readLines(file("en_US.twitter.txt"))
 head(twitter)
 
-cat("Data Length = ", length(data),
+
+
+
+#Paste () to create a vector of characters and Print () to view the script.
+print(paste("Data Length = ", length(news),
             ", Blog Length = ", length(blog),
             ", Twitter Length = ", length(twitter)
             ))
 library(tm)
 
 ## Loading required package: NLP
+#Merge the data frames by common columns or row names
 #Load 5000 lines from every set in corpus
-merged <- paste(newsData[1:5000], blogData[1:5000], twitterData[1:5000])
+
+merged <- paste(news[1:5000], blog[1:5000], twitter[1:5000])
 corpus <- VCorpus(VectorSource(merged))
 corpus <- tm_map(corpus, stripWhitespace)
 corpus <- tm_map(corpus, removeNumbers)
@@ -28,7 +34,7 @@ corpusDf <-data.frame(text=unlist(sapply(corpus,
                   `[`, "content")), stringsAsFactors=F)
 
 findNGrams <- function(corp, grams) {
-  ngram <- NGramTokenizer(corp, Weka_control(min = grams, max = grams,
+ngram <- NGramTokenizer(corp, Weka_control(min = grams, max = grams,
                       delimiters = " \\r\\n\\t.,;:\"()?!"))
 ngram2 <- data.frame(table(ngram))
 
@@ -63,7 +69,7 @@ text(x=0.5, y=0, "4-gram cloud")
 
 par(mfrow = c(1, 1))
 
-barplot(TwoGrams[1:20,2], cex.names=0.5, names.arg=TwoGrams[1:20,1], col="red", main="2-Grams", las=2)
+barplot(TwoGrams[1:20,2], cex.names=0.5, names.arg=TwoGrams[1:20,1], horiz=True, col="red", main="2-Grams", las=2)
 
 barplot(ThreeGrams[1:20,2], cex.names=0.5, names.arg=ThreeGrams[1:20,1], col="green", main="3-Grams", las=2)
 
