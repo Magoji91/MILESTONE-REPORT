@@ -1,18 +1,39 @@
 setwd("C:/Users/smsanda/Documents/en_US")
 
+library(tm)
+library(stringi)
+library(RWeka)
+library(wordcloud)
+library(stringi)
+
+
 news <- readLines(file("en_US.news.txt"))
 head(news)
-blog <- readLines(file("en_US.blogs.txt"))
-head(blog)
+blogs <- readLines(file("en_US.blogs.txt"))
+head(blogs)
 twitter<- readLines(file("en_US.twitter.txt"))
 head(twitter)
 
+# Get file sizes
+blogs.size <- file.info("en_US.blogs.txt")$size / 1024 ^ 2
+news.size <- file.info("en_US.news.txt")$size / 1024 ^ 2
+twitter.size <- file.info("en_US.twitter.txt")$size / 1024 ^ 2
 
+# Get words in files
+blogs.words <- stri_count_words(blogs)
+news.words <- stri_count_words(news)
+twitter.words <- stri_count_words(twitter)
 
-
+# Summary of the data sets
+data.frame(source = c("blogs", "news", "twitter"),         
+           file.size.MB = c(blogs.size, news.size, twitter.size),
+           num.lines = c(length(blogs), length(news), length(twitter)),
+           num.words = c(sum(blogs.words), sum(news.words), sum(twitter.words)),
+           mean.num.words = c(mean(blogs.words), mean(news.words), mean(twitter.words)))
+               
 #Paste () to create a vector of characters and Print () to view the script.
 print(paste("Data Length = ", length(news),
-            ", Blog Length = ", length(blog),
+            ", Blogs Length = ", length(blogs),
             ", Twitter Length = ", length(twitter)
             ))
 library(tm)
@@ -21,15 +42,51 @@ library(tm)
 #Merge the data frames by common columns or row names
 #Load 5000 lines from every set in corpus
 
-merged <- paste(news[1:5000], blog[1:5000], twitter[1:5000])
+#Clean The Data
+#Before performing exploratory analysis, we must clean the data, This involves removing:
+#(1) URLs,
+#(2) special characters,
+#(3) punctuations,
+#(4) numbers,
+#(5) excess whitespace,
+#(6) stopwords, and
+#(7) changing the text to lower case.
+
+# Create corpus
+merged <- paste(news[1:5000], blogs[1:5000], twitter[1:5000])
 corpus <- VCorpus(VectorSource(merged))
+
+# Remove large files to clean up memory
+rm (blogs.words)
+rm(news.words)
+rm(twitter.words)
+
+rm(blogs)
+rm(news)
+rm(twitter)
+
+## Make it work with the new tm package
+corpus <- tm_map(corpus,
+                      content_transformer(function(x) 
+                        iconv(x, to="UTF-8", sub="byte")),
+                      mc.cores=1)
+
+## ALL THE CLEANING USING tm_maps.  Profanity filter also included.
+corpus <- tm_map(corpus, content_transformer(tolower), lazy = TRUE)
+corpus <- tm_map(corpus, content_transformer(removePunctuation))
+corpus <- tm_map(corpus, content_transformer(removeNumbers))
+removeURL <- function(x) gsub("http[[:alnum:]]*", "", x) 
+corpus <- tm_map(corpus, content_transformer(removeURL))
 corpus <- tm_map(corpus, stripWhitespace)
-corpus <- tm_map(corpus, removeNumbers)
-corpus <- tm_map(corpus, removePunctuation)
-corpus <- tm_map(corpus, removeWords, stopwords())
+corpus <- tm_map(corpus, removeWords, stopwords("english")) #words like "and", "but"
+#stopwords("english")
+corpus <- tm_map(corpus, stemDocument)
+corpus <- tm_map(corpus, stripWhitespace)
+
+#TOKENIZE (n-Gram Creation)
+#Once we have obtained a Corpus, we can begin to obtain “the bag of Words”, the tokens. The RWeka package is used to create the different n-grams of the sample corpus. Before that we separate by sentence because our goal is to predict the next word in a sentence.
 
 library(RWeka)
-
 corpusDf <-data.frame(text=unlist(sapply(corpus, 
                   `[`, "content")), stringsAsFactors=F)
 
@@ -44,9 +101,14 @@ colnames(ngram3) <- c("String","Count")
 ngram3
 }
 
-TwoGrams <- findNGrams(corpusDf, 2)
-ThreeGrams <- findNGrams(corpusDf, 3)
-FourGrams <- findNGrams(corpusDf, 4)
+#1-4 grams  tokenize
+UniGrams <- findNGrams(corpusDf,1)
+TwoGrams <- findNGrams(corpusDf,2)
+ThreeGrams <- findNGrams(corpusDf,3)
+FourGrams <- findNGrams(corpusDf,4)
+
+#Plot word clouds and histograms
+#The most frequent words in each gram and the prove that cleaning processes worked.
 
 library(wordcloud)
 ## Loading required package: RColorBrewer
@@ -69,8 +131,8 @@ text(x=0.5, y=0, "4-gram cloud")
 
 par(mfrow = c(1, 1))
 
-barplot(TwoGrams[1:20,2], cex.names=0.5, names.arg=TwoGrams[1:20,1], horiz=True, col="red", main="2-Grams", las=2)
+barplot(TwoGrams[1:20,2], cex.names=0.5, names.arg=TwoGrams[1:20,1], horiz=True, col="purple", main="2-Grams", las=2)
 
-barplot(ThreeGrams[1:20,2], cex.names=0.5, names.arg=ThreeGrams[1:20,1], col="green", main="3-Grams", las=2)
+barplot(ThreeGrams[1:20,2], cex.names=0.5, names.arg=ThreeGrams[1:20,1], col="gray", main="3-Grams", las=2)
 
-barplot(FourGrams[1:20,2], cex.names=0.5, names.arg=FourGrams[1:20,1], col="blue", main="4-Grams", las=2)
+barplot(FourGrams[1:20,2], cex.names=0.5, names.arg=FourGrams[1:20,1], col="black", main="4-Grams", las=2)
