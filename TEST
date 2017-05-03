@@ -129,7 +129,7 @@ text(x=0.5, y=0, "4-gram cloud")
 
 par(mfrow = c(1, 1))
 
-barplot(TwoGrams[1:20,2], cex.names=0.5, names.arg=TwoGrams[1:20,1], horiz=True, col="purple", main="2-Grams", las=2)
+barplot(TwoGrams[1:20,2], cex.names=0.5, names.arg=TwoGrams[1:20,1], col="purple", main="2-Grams", las=2)
 
 barplot(ThreeGrams[1:20,2], cex.names=0.5, names.arg=ThreeGrams[1:20,1], col="gray", main="3-Grams", las=2)
 
