@@ -1,10 +1,10 @@
 setwd("C:/Users/smsanda/Documents/en_US")
 
 library(tm)
-library(stringi)
 library(RWeka)
 library(wordcloud)
 library(stringi)
+library(SnowballC)
 
 
 news <- readLines(file("en_US.news.txt"))
@@ -88,17 +88,15 @@ corpus <- tm_map(corpus, stripWhitespace)
 
 library(RWeka)
 corpusDf <-data.frame(text=unlist(sapply(corpus, 
-                  `[`, "content")), stringsAsFactors=F)
+                                         `[`, "content")), stringsAsFactors=F)
 
 findNGrams <- function(corp, grams) {
 ngram <- NGramTokenizer(corp, Weka_control(min = grams, max = grams,
-                      delimiters = " \\r\\n\\t.,;:\"()?!"))
-ngram2 <- data.frame(table(ngram))
-
-#pick only top 25
-ngram3 <- ngram2[order(ngram2$Freq,decreasing = TRUE),][1:100,]
-colnames(ngram3) <- c("String","Count")
-ngram3
+                                             delimiters = " \\r\\n\\t.,;:\"()?!"))
+ngrama <- data.frame(table(ngram))
+ngramb <- ngrama[order(ngrama$Freq,decreasing = TRUE),][1:100,]
+colnames(ngramb) <- c("String","Count")
+ngramb
 }
 
 #1-4 grams  tokenize
