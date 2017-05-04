@@ -43,35 +43,13 @@ library(tm)
 #Load 5000 lines from every set in corpus
 
 #Clean The Data
-#Before performing exploratory analysis, we must clean the data, This involves removing:
-#(1) URLs,
-#(2) special characters,
-#(3) punctuations,
-#(4) numbers,
-#(5) excess whitespace,
-#(6) stopwords, and
-#(7) changing the text to lower case.
+#Before performing exploratory analysis:
 
 # Create corpus
 merged <- paste(news[1:5000], blogs[1:5000], twitter[1:5000])
 corpus <- VCorpus(VectorSource(merged))
 
-# Remove large files to clean up memory
-rm (blogs.words)
-rm(news.words)
-rm(twitter.words)
-
-rm(blogs)
-rm(news)
-rm(twitter)
-
-## Make it work with the new tm package
-corpus <- tm_map(corpus,
-                      content_transformer(function(x) 
-                        iconv(x, to="UTF-8", sub="byte")),
-                      mc.cores=1)
-
-## ALL THE CLEANING USING tm_maps.  Profanity filter also included.
+## ALL THE CLEANING USING tm_maps.  
 corpus <- tm_map(corpus, content_transformer(tolower), lazy = TRUE)
 corpus <- tm_map(corpus, content_transformer(removePunctuation))
 corpus <- tm_map(corpus, content_transformer(removeNumbers))
@@ -84,7 +62,7 @@ corpus <- tm_map(corpus, stemDocument)
 corpus <- tm_map(corpus, stripWhitespace)
 
 #TOKENIZE (n-Gram Creation)
-#Once we have obtained a Corpus, we can begin to obtain “the bag of Words”, the tokens. The RWeka package is used to create the different n-grams of the sample corpus. Before that we separate by sentence because our goal is to predict the next word in a sentence.
+# Use the RWeka package to create different n-grams of the sample corpus, but first you will have to separate the sentence once the target is to predict the next word in a sentence.
 
 library(RWeka)
 corpusDf <-data.frame(text=unlist(sapply(corpus, 
