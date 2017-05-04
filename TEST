@@ -49,14 +49,16 @@ library(tm)
 merged <- paste(news[1:5000], blogs[1:5000], twitter[1:5000])
 corpus <- VCorpus(VectorSource(merged))
 
-## ALL THE CLEANING USING tm_maps.  
+## CLEAN DATA USING TM PACKAGE
+#Remove punctuation and numbers, make lowercase, remove extra whitespace between words
+
 corpus <- tm_map(corpus, content_transformer(tolower), lazy = TRUE)
 corpus <- tm_map(corpus, content_transformer(removePunctuation))
 corpus <- tm_map(corpus, content_transformer(removeNumbers))
 removeURL <- function(x) gsub("http[[:alnum:]]*", "", x) 
 corpus <- tm_map(corpus, content_transformer(removeURL))
 corpus <- tm_map(corpus, stripWhitespace)
-corpus <- tm_map(corpus, removeWords, stopwords("english")) #words like "and", "but"
+corpus <- tm_map(corpus, removeWords, stopwords("english"))
 #stopwords("english")
 corpus <- tm_map(corpus, stemDocument)
 corpus <- tm_map(corpus, stripWhitespace)
@@ -93,6 +95,10 @@ require(RColorBrewer)
 par(mfrow = c(1, 3))
 palette <- brewer.pal(8,"Dark2")
 
+wordcloud(UniGrams[,1], TwoGrams[,2], min.freq =1, 
+          random.order = F, ordered.colors = F, colors=palette)
+text(x=0.5, y=0, "1-gram cloud")
+
 wordcloud(TwoGrams[,1], TwoGrams[,2], min.freq =1, 
           random.order = F, ordered.colors = F, colors=palette)
 text(x=0.5, y=0, "2-gram cloud")
@@ -107,8 +113,12 @@ text(x=0.5, y=0, "4-gram cloud")
 
 par(mfrow = c(1, 1))
 
-barplot(TwoGrams[1:20,2], cex.names=0.5, names.arg=TwoGrams[1:20,1], col="purple", main="2-Grams", las=2)
+barplot(TwoGrams[1:20,2], cex.names=0.5, names.arg=UniGrams[1:20,1], col="blue", main="Top 20 most common in sample 1-Grams", las=2)
 
-barplot(ThreeGrams[1:20,2], cex.names=0.5, names.arg=ThreeGrams[1:20,1], col="gray", main="3-Grams", las=2)
+barplot(TwoGrams[1:20,2], cex.names=0.5, names.arg=TwoGrams[1:20,1], col="purple", main="Top 20 most common in sample 2-Grams", las=2)
 
-barplot(FourGrams[1:20,2], cex.names=0.5, names.arg=FourGrams[1:20,1], col="black", main="4-Grams", las=2)
+barplot(ThreeGrams[1:20,2], cex.names=0.5, names.arg=ThreeGrams[1:20,1], col="gray", main="Top 20 most common in sample 3-Grams", las=2)
+
+barplot(FourGrams[1:20,2], cex.names=0.5, names.arg=FourGrams[1:20,1], col="black", main="Top 20 most common in sample 4-Grams", las=2)
+
+#In the milestone report, it allows me to have a better idea about the dataset we will be dealing with. However for the final project - creating a predictive word ShinyApp will be a totally different attempt.Despite limited the dataset to 150,000, the amount of time needed to run the codes is still considerable long. Hence I will expect even more time and resources are needed for doing up the Shinyapp.
