@@ -24,7 +24,12 @@ blogs.words <- stri_count_words(blogs)
 news.words <- stri_count_words(news)
 twitter.words <- stri_count_words(twitter)
 
-# Summary of the data sets
+# Summary the data
+summary(stri_count_words(blogs))
+summary(stri_count_words(news))
+summary(stri_count_words(twitter))
+
+# Prepare the data.frame
 data.frame(source = c("blogs", "news", "twitter"),         
            file.size.MB = c(blogs.size, news.size, twitter.size),
            num.lines = c(length(blogs), length(news), length(twitter)),
@@ -42,26 +47,17 @@ library(tm)
 #Merge the data frames by common columns or row names
 #Load 5000 lines from every set in corpus
 
-#Clean The Data
-#Before performing exploratory analysis:
-
 # Create corpus
 merged <- paste(news[1:5000], blogs[1:5000], twitter[1:5000])
 corpus <- VCorpus(VectorSource(merged))
 
 ## CLEAN DATA USING TM PACKAGE
-#Remove punctuation and numbers, make lowercase, remove extra whitespace between words
-
-corpus <- tm_map(corpus, content_transformer(tolower), lazy = TRUE)
-corpus <- tm_map(corpus, content_transformer(removePunctuation))
-corpus <- tm_map(corpus, content_transformer(removeNumbers))
-removeURL <- function(x) gsub("http[[:alnum:]]*", "", x) 
-corpus <- tm_map(corpus, content_transformer(removeURL))
+#Remove extra white space, numbers, punctuation, etc.
 corpus <- tm_map(corpus, stripWhitespace)
-corpus <- tm_map(corpus, removeWords, stopwords("english"))
-#stopwords("english")
+corpus <- tm_map(corpus, removeNumbers)
+corpus <- tm_map(corpus, removePunctuation)
+corpus <- tm_map(corpus, removeWords, stopwords())
 corpus <- tm_map(corpus, stemDocument)
-corpus <- tm_map(corpus, stripWhitespace)
 
 #TOKENIZE (n-Gram Creation)
 # Use the RWeka package to create different n-grams of the sample corpus, but first you will have to separate the sentence once the target is to predict the next word in a sentence.
@@ -95,7 +91,7 @@ require(RColorBrewer)
 par(mfrow = c(1, 3))
 palette <- brewer.pal(8,"Dark2")
 
-wordcloud(UniGrams[,1], TwoGrams[,2], min.freq =1, 
+wordcloud(UniGrams[,1], UniGrams[,2], min.freq =1, 
           random.order = F, ordered.colors = F, colors=palette)
 text(x=0.5, y=0, "1-gram cloud")
 
