@@ -36,23 +36,24 @@ data.frame(source = c("blogs", "news", "twitter"),
            num.words = c(sum(blogs.words), sum(news.words), sum(twitter.words)),
            mean.num.words = c(mean(blogs.words), mean(news.words), mean(twitter.words)))
                
-#Paste () to create a vector of characters and Print () to view the script.
-print(paste("Data Length = ", length(news),
-            ", Blogs Length = ", length(blogs),
-            ", Twitter Length = ", length(twitter)
-            ))
-library(tm)
-
-## Loading required package: NLP
-#Merge the data frames by common columns or row names
-#Load 5000 lines from every set in corpus
-
 # Create corpus
+# Merge the data frames by common columns or row names
+# Load 5000 lines from every set in corpus
 merged <- paste(news[1:5000], blogs[1:5000], twitter[1:5000])
 corpus <- VCorpus(VectorSource(merged))
 
+# Remove large files to clean up memory
+rm (blogs.words)
+rm(news.words)
+rm(twitter.words)
+
+rm(blogs)
+rm(news)
+rm(twitter)
+
 ## CLEAN DATA USING TM PACKAGE
 #Remove extra white space, numbers, punctuation, etc.
+library(tm)
 corpus <- tm_map(corpus, stripWhitespace)
 corpus <- tm_map(corpus, removeNumbers)
 corpus <- tm_map(corpus, removePunctuation)
@@ -96,7 +97,7 @@ wordcloud(UniGrams[,1], UniGrams[,2], min.freq =1,
 text(x=0.5, y=0, "1-gram cloud")
 
 wordcloud(TwoGrams[,1], TwoGrams[,2], min.freq =1, 
-          random.order = F, ordered.colors = F, colors=palette)
+random.order = F, ordered.colors = F, colors=palette) 
 text(x=0.5, y=0, "2-gram cloud")
 
 wordcloud(ThreeGrams[,1], ThreeGrams[,2], min.freq =1, 
