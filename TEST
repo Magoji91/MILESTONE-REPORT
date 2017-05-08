@@ -1,10 +1,10 @@
 setwd("C:/Users/smsanda/Documents/en_US")
 
-library(tm)
-library(RWeka)
-library(wordcloud)
-library(stringi)
-library(SnowballC)
+library(tm) #A framework for text mining applications within R.
+library(RWeka) #Weka is a collection of machine learning algorithms for data mining tasks written in Java, containing tools for data pre-processing, classification, regression, clustering, association rules, and visualization. Package 'RWeka' contains the interface code, the Weka jar is in a separate package 'RWekajars'
+library(wordcloud) #can be an handy tool when you need to highlight the most commonly cited words in a text using a quick visualization
+library(stringi) #Allows for fast, correct, consistent, portable, as well as convenient character string/text processing in every locale and any native encoding
+library(SnowballC) #An R interface to the C libstemmer library that implements Porter's word stemming algorithm for collapsing words to a common root to aid comparison of vocabulary
 
 
 news <- readLines(file("en_US.news.txt"))
