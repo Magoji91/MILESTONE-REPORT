@@ -48,13 +48,109 @@ summary(stri_count_words(blogs))
 summary(stri_count_words(news))
 summary(stri_count_words(twitter))
 ```
+# PREPARE THE DATA FRAME
+```{r data frame}
+data.frame(source = c("blogs", "news", "twitter"),         
+           file.size.MB = c(blogs.size, news.size, twitter.size),
+           num.lines = c(length(blogs), length(news), length(twitter)),
+           num.words = c(sum(blogs.words), sum(news.words), sum(twitter.words)),
+           mean.num.words = c(mean(blogs.words), mean(news.words), mean(twitter.words)))
+```
+# Create corpus
+Merge the data frames by common columns or row names for Load 5000 lines from every set in corpus
+```{r corpus}
+merged <- paste(news[1:5000], blogs[1:5000], twitter[1:5000])
+corpus <- VCorpus(VectorSource(merged))
+```
+# Remove large files to clean up memory
+To prevent memory from being clogged by intermediate files use the rm command
+```{r save}
+rm (blogs.words)
+rm(news.words)
+rm(twitter.words)
 
-## Including Plots
+rm(blogs)
+rm(news)
+rm(twitter)
+```
+## CLEAN DATA USING TM PACKAGE
+Remove extra white space, numbers, punctuation, etc.
+```{r clean}
+library(tm)
+corpus <- tm_map(corpus, stripWhitespace)
+corpus <- tm_map(corpus, removeNumbers)
+corpus <- tm_map(corpus, removePunctuation)
+corpus <- tm_map(corpus, removeWords, stopwords())
+corpus <- tm_map(corpus, stemDocument)
+```
+#TOKENIZE (n-Gram Creation)
+Use the RWeka package to create different n-grams of the sample corpus, but first you will have to separate the sentence once the target is to predict the next word in a sentence.
+```{r token}
+library(RWeka)
+corpusDf <-data.frame(text=unlist(sapply(corpus, 
+                                         `[`, "content")), stringsAsFactors=F)
 
-You can also embed plots, for example:
+findNGrams <- function(corp, grams) {
+ngram <- NGramTokenizer(corp, Weka_control(min = grams, max = grams,
+                                             delimiters = " \\r\\n\\t.,;:\"()?!"))
+ngrama <- data.frame(table(ngram))
+ngramb <- ngrama[order(ngrama$Freq,decreasing = TRUE),][1:100,]
+colnames(ngramb) <- c("String","Count")
+ngramb
+}
 
-```{r pressure, echo=FALSE}
-
+#1-4 grams  tokenize
+UniGrams <- findNGrams(corpusDf,1)
+TwoGrams <- findNGrams(corpusDf,2)
+ThreeGrams <- findNGrams(corpusDf,3)
+FourGrams <- findNGrams(corpusDf,4)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+##WORD CLOUDS AND HISTOGRAMS
+
+The most frequent words in each gram and the prove that cleaning processes worked.
+
+#WORDCLOUD
+```{r wordcloud, echo=FALSE}
+library(wordcloud)
+## Loading required package: RColorBrewer
+require(RColorBrewer)
+
+par(mfrow = c(1, 3))
+palette <- brewer.pal(8,"Dark2")
+
+wordcloud(UniGrams[,1], UniGrams[,2], min.freq =1, 
+          random.order = F, ordered.colors = F, colors=palette)
+text(x=0.5, y=0, "1-gram cloud")
+
+wordcloud(TwoGrams[,1], TwoGrams[,2], min.freq =1, 
+random.order = F, ordered.colors = F, colors=palette) 
+text(x=0.5, y=0, "2-gram cloud")
+
+wordcloud(ThreeGrams[,1], ThreeGrams[,2], min.freq =1, 
+          random.order = F, ordered.colors = F, colors=palette)
+text(x=0.5, y=0, "3-gram cloud")
+
+wordcloud(FourGrams[,1], FourGrams[,2], min.freq =1, 
+          random.order = F, ordered.colors = F, colors=palette)
+text(x=0.5, y=0, "4-gram cloud")
+```
+
+#HISTOGRAMS
+```{r histogram, echo=FALSE}
+par(mfrow = c(1, 1))
+
+barplot(TwoGrams[1:20,2], cex.names=0.5, names.arg=UniGrams[1:20,1], col="blue", main="Top 20 most common in sample 1-Grams", las=2)
+
+barplot(TwoGrams[1:20,2], cex.names=0.5, names.arg=TwoGrams[1:20,1], col="purple", main="Top 20 most common in sample 2-Grams", las=2)
+
+barplot(ThreeGrams[1:20,2], cex.names=0.5, names.arg=ThreeGrams[1:20,1], col="gray", main="Top 20 most common in sample 3-Grams", las=2)
+
+barplot(FourGrams[1:20,2], cex.names=0.5, names.arg=FourGrams[1:20,1], col="black", main="Top 20 most common in sample 4-Grams", las=2)
+```
+
+#CONLCUSION
+In a first analysis, the creation of the algorithm of prediction and use in a ShinyApp application should occur through the use of the n-gram model to predict the next word. For example, if the algorithm does not find any matching quadrigram, then the algorithm would go back to the tigram model and then to the bigram model until it reaches the unigram.
+However, I expect a certain delay in processing due to the size of the files.
+
+Regarding the Shiny App I intend to create an interface for the user, which will contain a text input box in which he will enter a phrase so that the algarítimo informs the probable words following the sentence
