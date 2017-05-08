@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## THE PROJECT
 The purpose of the current project is to create a prediction algorithm, which can be used in a Shiny app, having as a starting point and data contained in the Coursera-SwiftKey file. This file consists of quotations and sentences from blogs, news and twitter in four languages: German, Finnish, Russian and English. However, as I do not know the other languages, I only worked with the data in English.
 
 As for the creation of an algorithm for the prediction of words and phrases contained in blogs, news and twitter, I chose for an exploratory analysis the following packages:
@@ -56,13 +56,13 @@ data.frame(source = c("blogs", "news", "twitter"),
            num.words = c(sum(blogs.words), sum(news.words), sum(twitter.words)),
            mean.num.words = c(mean(blogs.words), mean(news.words), mean(twitter.words)))
 ```
-# Create corpus
+# CREATE CORPUS
 Merge the data frames by common columns or row names for Load 5000 lines from every set in corpus
 ```{r corpus}
 merged <- paste(news[1:5000], blogs[1:5000], twitter[1:5000])
 corpus <- VCorpus(VectorSource(merged))
 ```
-# Remove large files to clean up memory
+# REMOVE LARGE FILE TO CLEAN UP THE MEMORY
 To prevent memory from being clogged by intermediate files use the rm command
 ```{r save}
 rm (blogs.words)
@@ -110,7 +110,6 @@ FourGrams <- findNGrams(corpusDf,4)
 
 The most frequent words in each gram and the prove that cleaning processes worked.
 
-#WORDCLOUD
 ```{r wordcloud, echo=FALSE}
 library(wordcloud)
 ## Loading required package: RColorBrewer
@@ -149,7 +148,7 @@ barplot(ThreeGrams[1:20,2], cex.names=0.5, names.arg=ThreeGrams[1:20,1], col="gr
 barplot(FourGrams[1:20,2], cex.names=0.5, names.arg=FourGrams[1:20,1], col="black", main="Top 20 most common in sample 4-Grams", las=2)
 ```
 
-#CONLCUSION
+#CONCLUSION
 In a first analysis, the creation of the algorithm of prediction and use in a ShinyApp application should occur through the use of the n-gram model to predict the next word. For example, if the algorithm does not find any matching quadrigram, then the algorithm would go back to the tigram model and then to the bigram model until it reaches the unigram.
 However, I expect a certain delay in processing due to the size of the files.
 
