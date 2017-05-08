@@ -1,0 +1,60 @@
+---
+title: "MILESTONE-REPORT"
+author: "SMS"
+date: "8 de maio de 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+The purpose of the current project is to create a prediction algorithm, which can be used in a Shiny app, having as a starting point and data contained in the Coursera-SwiftKey file. This file consists of quotations and sentences from blogs, news and twitter in four languages: German, Finnish, Russian and English. However, as I do not know the other languages, I only worked with the data in English.
+
+As for the creation of an algorithm for the prediction of words and phrases contained in blogs, news and twitter, I chose for an exploratory analysis the following packages:
+
+```{r packages}
+setwd("C:/Users/smsanda/Documents/en_US")
+
+library(tm) #A framework for text mining applications within R.
+library(RWeka) #Weka is a collection of machine learning algorithms for data mining tasks written in Java, containing tools for data pre-processing, classification, regression, clustering, association rules, and visualization. Package 'RWeka' contains the interface code, the Weka jar is in a separate package 'RWekajars'
+library(wordcloud) #can be an handy tool when you need to highlight the most commonly cited words in a text using a quick visualization
+library(stringi) #Allows for fast, correct, consistent, portable, as well as convenient character string/text processing in every locale and any native encoding
+library(SnowballC) #An R interface to the C libstemmer library that implements Porter's word stemming algorithm for collapsing words to a common root to aid comparison of vocabulary
+```
+
+##READ THE FILES AND GET MORE INFORMATION:
+```{r data}
+news <- readLines(file("en_US.news.txt"))
+head(news)
+blogs <- readLines(file("en_US.blogs.txt"))
+head(blogs)
+twitter<- readLines(file("en_US.twitter.txt"))
+head(twitter)
+
+# File sizes
+blogs.size <- file.info("en_US.blogs.txt")$size / 1024 ^ 2
+news.size <- file.info("en_US.news.txt")$size / 1024 ^ 2
+twitter.size <- file.info("en_US.twitter.txt")$size / 1024 ^ 2
+
+# Accounting the words in files
+blogs.words <- stri_count_words(blogs)
+news.words <- stri_count_words(news)
+twitter.words <- stri_count_words(twitter)
+
+# Summary the data
+summary(stri_count_words(blogs))
+summary(stri_count_words(news))
+summary(stri_count_words(twitter))
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
